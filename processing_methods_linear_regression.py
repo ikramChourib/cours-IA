@@ -55,3 +55,5 @@ plt.show()
 print("Pente (coef) :", model.coef_[0])
 print("Ordonnée à l'origine (intercept) :", model.intercept_)
 
+
+
