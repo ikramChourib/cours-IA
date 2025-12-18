@@ -21,7 +21,7 @@ EARLY_STOPPING_PATIENCE = 5   # nombre d'époques sans amélioration avant arrê
 LR_REDUCE_PATIENCE = 3        # nombre d'époques sans amélioration avant réduction du LR
 
 # Chemin pour sauvegarder le meilleur modèle
-BEST_MODEL_PATH = "best_cnn_cifar10.h5"
+BEST_MODEL_PATH = "data/best_cnn_cifar10.h5"
 
 
 """
