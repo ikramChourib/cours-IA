@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from transformers import pipeline
+
 import re
 
 # -----------------------------
@@ -10,42 +10,28 @@ import re
 st.set_page_config(page_title="Analyse intelligente des avis", layout="wide")
 st.title("🧠 Analyse intelligente des avis clients (NLP + Dashboard)")
 
-# -----------------------------
+# -----------------------------s&
 # NLP: Sentiment pipeline
 # -----------------------------
 # Modèle simple multi-langues (donne un score 1..5 étoiles)
-@st.cache_resource
-def load_sentiment_model():
-    return pipeline(
-        "sentiment-analysis",
-        model="nlptown/bert-base-multilingual-uncased-sentiment"
-    )
+from textblob_fr import PatternTagger, PatternAnalyzer
+from textblob import Blobber
 
-sentiment_model = load_sentiment_model()
+tb = Blobber(pos_tagger=PatternTagger(), analyzer=PatternAnalyzer())
 
-def stars_to_sentiment(label: str) -> str:
-    # label: "1 star" .. "5 stars"
-    m = re.search(r"(\d)", label)
-    stars = int(m.group(1)) if m else 3
-    if stars <= 2:
-        return "Négatif"
-    elif stars == 3:
-        return "Neutre"
-    return "Positif"
+def analyze_sentiment(texts):
+    rows = []
+    for t in texts:
+        pol = tb(t).sentiment[0]  # [-1..1]
+        if pol > 0.1:
+            s = "Positif"
+        elif pol < -0.1:
+            s = "Négatif"
+        else:
+            s = "Neutre"
+        rows.append({"review": t, "sentiment": s, "score": float(pol), "label_raw": None})
+    return pd.DataFrame(rows)
 
-def analyze_sentiment(texts, batch_size=16):
-    results = []
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i:i+batch_size]
-        preds = sentiment_model(batch)
-        for t, p in zip(batch, preds):
-            results.append({
-                "review": t,
-                "label_raw": p["label"],
-                "score": float(p["score"]),
-                "sentiment": stars_to_sentiment(p["label"])
-            })
-    return pd.DataFrame(results)
 
 def top_keywords(texts, k=15):
     vectorizer = TfidfVectorizer(
